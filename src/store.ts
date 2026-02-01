@@ -418,7 +418,6 @@ export const useTournamentStore = create<TournamentStore>()(
         // Get all positions for the new round
         const targetPositions = getRoundCellPositions(row, col, matchCount, settings.courtCount);
         const targetStartIndex = posToLinearIndex({ row, col });
-        const targetEndIndex = posToLinearIndex(targetPositions[targetPositions.length - 1]);
 
         // Remove the round being placed from the schedule (if it was already scheduled)
         let newSchedule = schedule.filter(sr => sr.roundId !== roundId);
@@ -487,8 +486,6 @@ export const useTournamentStore = create<TournamentStore>()(
 
         // Sort rounds to shift from last to first (by their position in the grid)
         roundsToShift.sort((a, b) => {
-          const aPos = getOccupiedPositions(a);
-          const bPos = getOccupiedPositions(b);
           const aStart = posToLinearIndex({ row: a.row, col: a.startCol });
           const bStart = posToLinearIndex({ row: b.row, col: b.startCol });
           return bStart - aStart; // Descending order (last first)
@@ -500,7 +497,6 @@ export const useTournamentStore = create<TournamentStore>()(
 
         for (const sr of roundsToShift) {
           // Calculate new position by adding shiftAmount cells
-          const currentPositions = getOccupiedPositions(sr);
           const firstCellIndex = posToLinearIndex({ row: sr.row, col: sr.startCol });
           const newFirstCellIndex = firstCellIndex + shiftAmount;
 

@@ -19,10 +19,8 @@ import { Round, Series } from '../types';
 export const SchedulePhase: React.FC = () => {
   const {
     setPhase,
-    scheduleRound,
     scheduleRoundWithPush,
     unscheduleRound,
-    canScheduleRound,
     autoSchedule,
     clearSchedule,
     undoSchedule,
