@@ -15,6 +15,7 @@ export const ScheduleCell: React.FC<ScheduleCellProps> = ({ row, col }) => {
   const settings = useTournamentStore((state) => state.settings);
   const unscheduleRound = useTournamentStore((state) => state.unscheduleRound);
   const removeEmptyCell = useTournamentStore((state) => state.removeEmptyCell);
+  const scheduleNextRoundOfSeries = useTournamentStore((state) => state.scheduleNextRoundOfSeries);
 
   // Find round scheduled in this cell (checking if this cell is within the round's positions)
   let roundInfo: { round: any; series: any; isFirstCell: boolean } | null = null;
@@ -108,6 +109,7 @@ export const ScheduleCell: React.FC<ScheduleCellProps> = ({ row, col }) => {
           round={roundInfo.round}
           series={roundInfo.series}
           onRemove={() => unscheduleRound(roundInfo!.round.id)}
+          onDoubleClick={() => scheduleNextRoundOfSeries(roundInfo!.round.id)}
         />
       )}
       {roundInfo && !roundInfo.isFirstCell && (

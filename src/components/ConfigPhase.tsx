@@ -2,6 +2,70 @@ import React, { useState } from 'react';
 import { useTournamentStore } from '../store';
 import { getContrastColor } from '../types';
 
+// Tournament bracket templates
+interface BracketTemplate {
+  id: string;
+  name: string;
+  description: string;
+  rounds: Array<{
+    label: string;
+    matchCount: number;
+  }>;
+}
+
+const BRACKET_TEMPLATES: BracketTemplate[] = [
+  {
+    id: 'two-pools-4-2out',
+    name: '2 Poules de 4 (2 sortants)',
+    description: 'Deux poules de 4, 2 qualifiés par poule, demi-finales et finale',
+    rounds: [
+      { label: 'Poule T1', matchCount: 4 },
+      { label: 'Poule T2', matchCount: 4 },
+      { label: 'Poule T3', matchCount: 4 },
+      { label: 'Demi-finales', matchCount: 2 },
+      { label: 'Finale', matchCount: 1 },
+    ],
+  },
+  {
+    id: 'four-pools-3-1out',
+    name: '4 Poules de 3 (1 sortant)',
+    description: 'Quatre poules de 3, 1 qualifié par poule, demi-finales et finale',
+    rounds: [
+      { label: 'Poule T1', matchCount: 6 },
+      { label: 'Poule T2', matchCount: 6 },
+      { label: 'Poule T3', matchCount: 6 },
+      { label: 'Demi-finales', matchCount: 2 },
+      { label: 'Finale', matchCount: 1 },
+    ],
+  },
+  {
+    id: 'single-pool-5',
+    name: 'Poule unique (5 équipes)',
+    description: 'Une poule de 5 avec finale',
+    rounds: [
+      { label: 'Poule T1', matchCount: 2 },
+      { label: 'Poule T2', matchCount: 2 },
+      { label: 'Poule T3', matchCount: 2 },
+      { label: 'Poule T4', matchCount: 2 },
+      { label: 'Poule T5', matchCount: 2 },
+      { label: 'Finale', matchCount: 1 },
+    ],
+  },
+  {
+    id: 'single-pool-6',
+    name: 'Poule unique (6 équipes)',
+    description: 'Une poule de 6 avec finale',
+    rounds: [
+      { label: 'Poule T1', matchCount: 3 },
+      { label: 'Poule T2', matchCount: 3 },
+      { label: 'Poule T3', matchCount: 3 },
+      { label: 'Poule T4', matchCount: 3 },
+      { label: 'Poule T5', matchCount: 3 },
+      { label: 'Finale', matchCount: 1 },
+    ],
+  }
+];
+
 export const ConfigPhase: React.FC = () => {
   const {
     settings,
@@ -17,13 +81,11 @@ export const ConfigPhase: React.FC = () => {
     resetAll,
   } = useTournamentStore();
 
-  const [newSeriesName, setNewSeriesName] = useState('');
   const [newSeriesShortName, setNewSeriesShortName] = useState('');
 
   const handleAddSeries = () => {
-    if (newSeriesName.trim() && newSeriesShortName.trim()) {
-      addSeries(newSeriesName.trim(), newSeriesShortName.trim());
-      setNewSeriesName('');
+    if (newSeriesShortName.trim()) {
+      addSeries(newSeriesShortName.trim(), newSeriesShortName.trim());
       setNewSeriesShortName('');
     }
   };
@@ -36,6 +98,42 @@ export const ConfigPhase: React.FC = () => {
     let label = `Tour ${roundNum}`;
     // Default match count
     addRound(seriesId, 4, label);
+  };
+
+  const handleApplyBracketTemplate = (template: BracketTemplate) => {
+    if (newSeriesShortName.trim()) {
+      // Add the series first
+      addSeries(newSeriesShortName.trim(), newSeriesShortName.trim());
+
+      // Get the newly created series (it will be the last one)
+      setTimeout(() => {
+        const currentSeries = useTournamentStore.getState().series;
+        const newSeries = currentSeries[currentSeries.length - 1];
+
+        if (newSeries) {
+          // Add all rounds from the template
+          template.rounds.forEach((round) => {
+            addRound(newSeries.id, round.matchCount, round.label);
+          });
+        }
+
+        // Increment the number in the field instead of clearing
+        const incrementString = (str: string): string => {
+          // Match a number at the end of the string
+          const match = str.match(/^(.*?)(\d+)$/);
+          if (match) {
+            // Extract prefix and number, increment the number
+            const prefix = match[1];
+            const num = parseInt(match[2], 10);
+            return `${prefix}${num + 1}`;
+          }
+          // No number found, reset to empty
+          return '';
+        };
+
+        setNewSeriesShortName(incrementString(newSeriesShortName.trim()));
+      }, 50);
+    }
   };
 
   const totalRounds = series.reduce((acc, s) => acc + s.rounds.length, 0);
@@ -118,21 +216,14 @@ export const ConfigPhase: React.FC = () => {
           <div className="flex gap-3 flex-wrap">
             <input
               type="text"
-              placeholder="Nom complet (ex: Double Homme 1)"
-              value={newSeriesName}
-              onChange={(e) => setNewSeriesName(e.target.value)}
-              className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
               placeholder="Abréviation (ex: DH1)"
               value={newSeriesShortName}
               onChange={(e) => setNewSeriesShortName(e.target.value)}
-              className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={handleAddSeries}
-              disabled={!newSeriesName.trim() || !newSeriesShortName.trim()}
+              disabled={!newSeriesShortName.trim()}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               + Ajouter
@@ -140,31 +231,39 @@ export const ConfigPhase: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Add Templates */}
+        {/* Bracket Templates */}
         <div className="mb-6">
-          <h4 className="text-sm font-medium text-gray-600 mb-2">
-            Ajout rapide :
+          <h4 className="text-sm font-medium text-gray-700 mb-3">
+            📋 Structures de tableau prédéfinies
           </h4>
-          <div className="flex gap-2 flex-wrap">
-            {[
-              { name: 'Simple Homme', short: 'SH' },
-              { name: 'Simple Dame', short: 'SD' },
-              { name: 'Double Homme', short: 'DH' },
-              { name: 'Double Dame', short: 'DD' },
-              { name: 'Double Mixte', short: 'DX' },
-            ].map((template) => (
+          <p className="text-xs text-gray-600 mb-3">
+            Sélectionnez une structure pour créer automatiquement une série avec tous ses tours.
+            Remplissez d'abord l'abréviation ci-dessus.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {BRACKET_TEMPLATES.map((template) => (
               <button
-                key={template.short}
-                onClick={() => {
-                  const existing = series.filter((s) =>
-                    s.shortName.startsWith(template.short)
-                  ).length;
-                  const num = existing + 1;
-                  addSeries(`${template.name} ${num}`, `${template.short}${num}`);
-                }}
-                className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+                key={template.id}
+                onClick={() => handleApplyBracketTemplate(template)}
+                disabled={!newSeriesShortName.trim()}
+                className="text-left p-3 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white"
               >
-                + {template.short}
+                <div className="font-semibold text-sm text-gray-800 mb-1">
+                  {template.name}
+                </div>
+                <div className="text-xs text-gray-600 mb-2">
+                  {template.description}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {template.rounds.map((round, idx) => (
+                    <span
+                      key={idx}
+                      className="text-xs px-2 py-0.5 bg-gray-100 rounded"
+                    >
+                      {round.label} ({round.matchCount}m)
+                    </span>
+                  ))}
+                </div>
               </button>
             ))}
           </div>

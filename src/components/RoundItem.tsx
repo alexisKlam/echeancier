@@ -88,7 +88,8 @@ export const DraggableRoundInGrid: React.FC<{
   round: Round;
   series: Series;
   onRemove: () => void;
-}> = ({ round, series, onRemove }) => {
+  onDoubleClick?: () => void;
+}> = ({ round, series, onRemove, onDoubleClick }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: round.id,
@@ -113,7 +114,9 @@ export const DraggableRoundInGrid: React.FC<{
       style={style}
       {...listeners}
       {...attributes}
+      onDoubleClick={onDoubleClick}
       className="round-item px-2 py-1 rounded text-xs font-medium flex items-center justify-between gap-1 w-full h-full cursor-grab active:cursor-grabbing"
+      title={onDoubleClick ? "Double-cliquer pour placer le tour suivant de cette série" : undefined}
     >
       <div className="flex flex-col items-start leading-tight">
         <span className="font-bold">{series.shortName}</span>

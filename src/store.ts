@@ -29,6 +29,7 @@ interface TournamentStore extends TournamentState {
   scheduleRound: (roundId: string, row: number, col: number) => void;
   scheduleRoundWithPush: (roundId: string, row: number, col: number) => void;
   scheduleRoundNext: (roundId: string) => void;
+  scheduleNextRoundOfSeries: (currentRoundId: string) => void;
   unscheduleRound: (roundId: string) => void;
   moveScheduledRound: (roundId: string, newRow: number, newCol: number) => void;
   removeEmptyCell: (row: number, col: number) => void;
@@ -377,6 +378,44 @@ export const useTournamentStore = create<TournamentStore>()(
 
         // Use scheduleRound to place it
         get().scheduleRound(roundId, targetRow, targetCol);
+      },
+
+      scheduleNextRoundOfSeries: (currentRoundId) => {
+        const state = get();
+        const { series, schedule } = state;
+
+        // Find the current round and its series
+        let currentSeries: Series | undefined;
+        let currentRoundIndex = -1;
+
+        for (const s of series) {
+          const roundIndex = s.rounds.findIndex((r) => r.id === currentRoundId);
+          if (roundIndex !== -1) {
+            currentSeries = s;
+            currentRoundIndex = roundIndex;
+            break;
+          }
+        }
+
+        if (!currentSeries || currentRoundIndex === -1) return;
+
+        // Check if there's a next round in this series
+        if (currentRoundIndex + 1 >= currentSeries.rounds.length) {
+          // No next round available
+          return;
+        }
+
+        const nextRound = currentSeries.rounds[currentRoundIndex + 1];
+
+        // Check if the next round is already scheduled
+        const isAlreadyScheduled = schedule.some(sr => sr.roundId === nextRound.id);
+        if (isAlreadyScheduled) {
+          // Already scheduled, do nothing
+          return;
+        }
+
+        // Schedule it at the next available position
+        get().scheduleRoundNext(nextRound.id);
       },
 
       scheduleRoundWithPush: (roundId, row, col) => {
