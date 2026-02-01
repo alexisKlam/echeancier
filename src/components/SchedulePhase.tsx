@@ -14,7 +14,10 @@ import { useTournamentStore } from '../store';
 import { ScheduleGrid } from './ScheduleGrid';
 import { UnscheduledPool } from './UnscheduledPool';
 import { RoundItemStatic } from './RoundItem';
+import { SeriesTableView } from './SeriesTableView';
 import { Round, Series } from '../types';
+
+type ViewMode = 'grid' | 'table';
 
 export const SchedulePhase: React.FC = () => {
   const {
@@ -34,6 +37,7 @@ export const SchedulePhase: React.FC = () => {
   } | null>(null);
 
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -174,6 +178,31 @@ export const SchedulePhase: React.FC = () => {
             </div>
           </div>
 
+          {/* View Mode Toggle */}
+          <div className="mt-4 flex items-center gap-2">
+            <span className="text-sm text-gray-600">Vue :</span>
+            <div className="flex rounded-lg overflow-hidden border border-gray-300">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === 'grid'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+              >
+                📊 Grille horaire
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === 'table'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+              >
+                📋 Vue par série
+              </button>
+            </div>
+          </div>
+
           {/* Error message */}
           {error && (
             <div className="mt-3 p-3 bg-red-100 border border-red-300 text-red-700 rounded-md">
@@ -183,31 +212,37 @@ export const SchedulePhase: React.FC = () => {
         </div>
 
         {/* Main content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {/* Unscheduled pool */}
-          <div className="lg:col-span-1">
-            <UnscheduledPool />
-          </div>
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            {/* Unscheduled pool */}
+            <div className="lg:col-span-1">
+              <UnscheduledPool />
+            </div>
 
-          {/* Schedule grid */}
-          <div className="lg:col-span-3">
-            <ScheduleGrid />
+            {/* Schedule grid */}
+            <div className="lg:col-span-3">
+              <ScheduleGrid />
+            </div>
           </div>
-        </div>
+        ) : (
+          <SeriesTableView />
+        )}
 
-        {/* Instructions */}
-        <div className="mt-4 bg-blue-50 rounded-lg p-4 text-sm text-blue-800">
-          <strong>💡 Instructions :</strong>
-          <ul className="mt-2 space-y-1 list-disc list-inside">
-            <li>Glissez-déposez les tours depuis la liste vers la grille</li>
-            <li>
-              Un même série ne peut pas avoir plusieurs tours sur la même ligne
-            </li>
-            <li>Les tours doivent respecter l'ordre (Tour 1 avant Tour 2, etc.)</li>
-            <li>Cliquez sur "Auto-générer" pour un placement automatique optimisé</li>
-            <li>Les données sont sauvegardées automatiquement dans le navigateur</li>
-          </ul>
-        </div>
+        {/* Instructions - only show in grid mode */}
+        {viewMode === 'grid' && (
+          <div className="mt-4 bg-blue-50 rounded-lg p-4 text-sm text-blue-800">
+            <strong>💡 Instructions :</strong>
+            <ul className="mt-2 space-y-1 list-disc list-inside">
+              <li>Glissez-déposez les tours depuis la liste vers la grille</li>
+              <li>
+                Un même série ne peut pas avoir plusieurs tours sur la même ligne
+              </li>
+              <li>Les tours doivent respecter l'ordre (Tour 1 avant Tour 2, etc.)</li>
+              <li>Cliquez sur "Auto-générer" pour un placement automatique optimisé</li>
+              <li>Les données sont sauvegardées automatiquement dans le navigateur</li>
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Drag overlay */}
