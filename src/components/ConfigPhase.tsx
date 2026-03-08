@@ -31,9 +31,34 @@ const BRACKET_TEMPLATES: BracketTemplate[] = [
     name: '4 Poules de 3 (1 sortant)',
     description: 'Quatre poules de 3, 1 qualifié par poule, demi-finales et finale',
     rounds: [
-      { label: 'Poule T1', matchCount: 6 },
-      { label: 'Poule T2', matchCount: 6 },
-      { label: 'Poule T3', matchCount: 6 },
+      { label: 'Poule T1', matchCount: 4 },
+      { label: 'Poule T2', matchCount: 4 },
+      { label: 'Poule T3', matchCount: 4 },
+      { label: 'Demi-finales', matchCount: 2 },
+      { label: 'Finale', matchCount: 1 },
+    ],
+  },
+  {
+    id: 'four-pools-3-2out',
+    name: '4 Poules de 3 (2 sortants)',
+    description: 'Quatre poules de 3, 2 qualifiés par poule, quart de finale,  demi-finales et finale',
+    rounds: [
+      { label: 'Poule T1', matchCount: 4 },
+      { label: 'Poule T2', matchCount: 4 },
+      { label: 'Poule T3', matchCount: 4 },
+      { label: 'Quart de finale', matchCount: 4 },
+      { label: 'Demi-finales', matchCount: 2 },
+      { label: 'Finale', matchCount: 1 },
+    ],
+  },
+  {
+    id: 'two-pools-3-2out',
+    name: '2 Poules de 3 (2 sortants)',
+    description: 'Deux poules de 3, 2 qualifiés par poule,   demi-finales et finale',
+    rounds: [
+      { label: 'Poule T1', matchCount: 2 },
+      { label: 'Poule T2', matchCount: 2 },
+      { label: 'Poule T3', matchCount: 2 },
       { label: 'Demi-finales', matchCount: 2 },
       { label: 'Finale', matchCount: 1 },
     ],
@@ -49,6 +74,16 @@ const BRACKET_TEMPLATES: BracketTemplate[] = [
       { label: 'Poule T4', matchCount: 2 },
       { label: 'Poule T5', matchCount: 2 },
       { label: 'Finale', matchCount: 1 },
+    ],
+  },
+  {
+    id: 'single-pool-4',
+    name: 'Poule unique (4 équipes)',
+    description: 'Une poule de 4 avec finale',
+    rounds: [
+      { label: 'Poule T1', matchCount: 2 },
+      { label: 'Poule T2', matchCount: 2 },
+      { label: 'Poule T3', matchCount: 2 }
     ],
   },
   {
@@ -292,6 +327,15 @@ export const ConfigPhase: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <input
+                      type="color"
+                      value={s.color}
+                      onChange={(e) =>
+                        updateSeries(s.id, { color: e.target.value })
+                      }
+                      className="w-8 h-8 p-0 border-none rounded cursor-pointer bg-transparent"
+                      title="Choisir une couleur"
+                    />
+                    <input
                       type="text"
                       value={s.shortName}
                       onChange={(e) =>
@@ -376,6 +420,7 @@ export const ConfigPhase: React.FC = () => {
                   <div className="mt-2 flex gap-1">
                     {[
                       { label: 'Poule', matches: 6 },
+                      { label: 'Quart', matches: 4 },
                       { label: 'Demi', matches: 2 },
                       { label: 'Finale', matches: 1 },
                     ].map((template) => (

@@ -18,7 +18,7 @@ interface TournamentStore extends TournamentState {
   // Series actions
   addSeries: (name: string, shortName: string) => void;
   removeSeries: (id: string) => void;
-  updateSeries: (id: string, updates: Partial<Omit<Series, 'id' | 'color'>>) => void;
+  updateSeries: (id: string, updates: Partial<Omit<Series, 'id'>>) => void;
 
   // Round actions
   addRound: (seriesId: string, matchCount: number, label: string) => void;
@@ -84,22 +84,12 @@ export const useTournamentStore = create<TournamentStore>()(
             color: generateSeriesColor(newIndex, newIndex + 1),
             rounds: [],
           };
-          // Regenerate colors for all series
-          const updatedSeries = [...state.series, newSeries].map((s, i, arr) => ({
-            ...s,
-            color: generateSeriesColor(i, arr.length),
-          }));
-          return { series: updatedSeries };
+          return { series: [...state.series, newSeries] };
         }),
 
       removeSeries: (id) =>
         set((state) => {
           const filteredSeries = state.series.filter((s) => s.id !== id);
-          // Regenerate colors
-          const updatedSeries = filteredSeries.map((s, i, arr) => ({
-            ...s,
-            color: generateSeriesColor(i, arr.length),
-          }));
           // Remove scheduled rounds for this series
           const seriesRoundIds = state.series
             .find((s) => s.id === id)
@@ -107,7 +97,7 @@ export const useTournamentStore = create<TournamentStore>()(
           const filteredSchedule = state.schedule.filter(
             (sr) => !seriesRoundIds.includes(sr.roundId)
           );
-          return { series: updatedSeries, schedule: filteredSchedule };
+          return { series: filteredSeries, schedule: filteredSchedule };
         }),
 
       updateSeries: (id, updates) =>
