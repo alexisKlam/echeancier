@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -29,7 +29,10 @@ export const SchedulePhase: React.FC = () => {
     undoSchedule,
     series,
     schedule,
+    importTournamentData,
   } = useTournamentStore();
+
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const [activeItem, setActiveItem] = useState<{
     round: Round;
@@ -114,6 +117,33 @@ export const SchedulePhase: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleOpenImportDialog = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleImportJSON: React.ChangeEventHandler<HTMLInputElement> = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const content = await file.text();
+      const parsed = JSON.parse(content);
+      const result = importTournamentData(parsed);
+
+      if (!result.success) {
+        setError(result.error ?? 'Import impossible. Fichier invalide.');
+        return;
+      }
+
+      setError(null);
+    } catch {
+      setError('Import impossible. Le fichier JSON est invalide.');
+    } finally {
+      // Allow importing the same file again.
+      event.target.value = '';
+    }
+  };
+
   // Stats
   const totalRounds = series.reduce((acc, s) => acc + s.rounds.length, 0);
   const scheduledCount = schedule.length;
@@ -175,6 +205,19 @@ export const SchedulePhase: React.FC = () => {
               >
                 💾 Exporter JSON
               </button>
+              <button
+                onClick={handleOpenImportDialog}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                📥 Importer JSON
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={handleImportJSON}
+              />
             </div>
           </div>
 

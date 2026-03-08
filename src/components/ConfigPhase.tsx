@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTournamentStore } from '../store';
 import { getContrastColor } from '../types';
 
@@ -114,9 +114,12 @@ export const ConfigPhase: React.FC = () => {
     updateRound,
     setPhase,
     resetAll,
+    importTournamentData,
   } = useTournamentStore();
 
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [newSeriesShortName, setNewSeriesShortName] = useState('');
+  const [importError, setImportError] = useState<string | null>(null);
 
   const handleAddSeries = () => {
     if (newSeriesShortName.trim()) {
@@ -177,12 +180,64 @@ export const ConfigPhase: React.FC = () => {
     0
   );
 
+  const handleOpenImportDialog = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleImportJSON: React.ChangeEventHandler<HTMLInputElement> = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const content = await file.text();
+      const parsed = JSON.parse(content);
+      const result = importTournamentData(parsed);
+
+      if (!result.success) {
+        setImportError(result.error ?? 'Import impossible. Fichier invalide.');
+        return;
+      }
+
+      setImportError(null);
+    } catch {
+      setImportError('Import impossible. Le fichier JSON est invalide.');
+    } finally {
+      // Allow importing the same file again.
+      event.target.value = '';
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
           ⚙️ Configuration du Tournoi
         </h2>
+
+        <div className="mb-6 flex items-center gap-3">
+          <button
+            onClick={handleOpenImportDialog}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            📥 Importer JSON
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={handleImportJSON}
+          />
+          <span className="text-sm text-gray-600">
+            Charge configuration + echeancier depuis un export
+          </span>
+        </div>
+
+        {importError && (
+          <div className="mb-6 p-3 bg-red-100 border border-red-300 text-red-700 rounded-md">
+            ⚠️ {importError}
+          </div>
+        )}
 
         {/* Tournament Settings */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 p-4 bg-gray-50 rounded-lg">

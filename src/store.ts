@@ -44,6 +44,7 @@ interface TournamentStore extends TournamentState {
 
   // Reset
   resetAll: () => void;
+  importTournamentData: (data: unknown) => { success: boolean; error?: string };
 
   // Validation
   canScheduleRound: (roundId: string, row: number, col: number, excludeRoundId?: string) => { valid: boolean; reason?: string };
@@ -63,6 +64,178 @@ const initialState: TournamentState = {
   scheduleHistory: [],
   currentPhase: 'config',
 };
+
+type ImportedTournamentPayload = {
+  settings: TournamentSettings;
+  series: Series[];
+  schedule: ScheduledRound[];
+};
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isValidTime(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^([01]\d|2[0-3]):([0-5]\d)$/.test(value)
+  );
+}
+
+function validateImportPayload(data: unknown): { payload?: ImportedTournamentPayload; error?: string } {
+  if (!isObject(data)) {
+    return { error: 'Le fichier JSON est invalide (objet attendu).' };
+  }
+
+  const { settings, series, schedule } = data;
+
+  if (!isObject(settings)) {
+    return { error: 'Parametres du tournoi invalides.' };
+  }
+
+  const courtCount = settings.courtCount;
+  const timeSlotDuration = settings.timeSlotDuration;
+  const startTime = settings.startTime;
+  const endTime = settings.endTime;
+
+  if (
+    typeof courtCount !== 'number' ||
+    !Number.isInteger(courtCount) ||
+    courtCount < 1 ||
+    typeof timeSlotDuration !== 'number' ||
+    !Number.isInteger(timeSlotDuration) ||
+    timeSlotDuration < 1 ||
+    !isValidTime(startTime) ||
+    !isValidTime(endTime)
+  ) {
+    return { error: 'Parametres du tournoi invalides.' };
+  }
+
+  if (!Array.isArray(series)) {
+    return { error: 'Liste des series invalide.' };
+  }
+
+  const seriesIds = new Set<string>();
+  const roundIds = new Set<string>();
+  const validatedSeries: Series[] = [];
+
+  for (const entry of series) {
+    if (!isObject(entry)) {
+      return { error: 'Une serie du fichier est invalide.' };
+    }
+
+    const { id, name, shortName, color, rounds } = entry;
+    if (
+      typeof id !== 'string' ||
+      !id.trim() ||
+      typeof name !== 'string' ||
+      typeof shortName !== 'string' ||
+      typeof color !== 'string' ||
+      !Array.isArray(rounds)
+    ) {
+      return { error: 'Une serie du fichier est invalide.' };
+    }
+
+    if (seriesIds.has(id)) {
+      return { error: 'IDs de serie dupliques detectes.' };
+    }
+    seriesIds.add(id);
+
+    const validatedRounds: Round[] = [];
+    for (const round of rounds) {
+      if (!isObject(round)) {
+        return { error: 'Un tour du fichier est invalide.' };
+      }
+
+      const { id: roundId, seriesId, roundNumber, matchCount, label } = round;
+
+      if (
+        typeof roundId !== 'string' ||
+        !roundId.trim() ||
+        typeof seriesId !== 'string' ||
+        seriesId !== id ||
+        typeof roundNumber !== 'number' ||
+        !Number.isInteger(roundNumber) ||
+        roundNumber < 1 ||
+        typeof matchCount !== 'number' ||
+        !Number.isInteger(matchCount) ||
+        matchCount < 1 ||
+        typeof label !== 'string'
+      ) {
+        return { error: 'Un tour du fichier est invalide.' };
+      }
+
+      if (roundIds.has(roundId)) {
+        return { error: 'IDs de tour dupliques detectes.' };
+      }
+      roundIds.add(roundId);
+
+      validatedRounds.push({
+        id: roundId,
+        seriesId,
+        roundNumber,
+        matchCount,
+        label,
+      });
+    }
+
+    validatedSeries.push({
+      id,
+      name,
+      shortName,
+      color,
+      rounds: validatedRounds,
+    });
+  }
+
+  if (!Array.isArray(schedule)) {
+    return { error: 'Echeancier invalide.' };
+  }
+
+  const validatedSchedule: ScheduledRound[] = [];
+  const scheduledRoundIds = new Set<string>();
+
+  for (const entry of schedule) {
+    if (!isObject(entry)) {
+      return { error: 'Une entree d\'echeancier est invalide.' };
+    }
+
+    const { roundId, row, startCol } = entry;
+    if (
+      typeof roundId !== 'string' ||
+      !roundIds.has(roundId) ||
+      typeof row !== 'number' ||
+      !Number.isInteger(row) ||
+      row < 0 ||
+      typeof startCol !== 'number' ||
+      !Number.isInteger(startCol) ||
+      startCol < 0 ||
+      startCol >= courtCount
+    ) {
+      return { error: 'Une entree d\'echeancier est invalide.' };
+    }
+
+    if (scheduledRoundIds.has(roundId)) {
+      return { error: 'Un tour ne peut apparaitre qu\'une seule fois dans l\'echeancier.' };
+    }
+    scheduledRoundIds.add(roundId);
+
+    validatedSchedule.push({ roundId, row, startCol });
+  }
+
+  return {
+    payload: {
+      settings: {
+        courtCount,
+        timeSlotDuration,
+        startTime,
+        endTime,
+      },
+      series: validatedSeries,
+      schedule: validatedSchedule,
+    },
+  };
+}
 
 export const useTournamentStore = create<TournamentStore>()(
   persist(
@@ -762,6 +935,24 @@ export const useTournamentStore = create<TournamentStore>()(
           schedule: newSchedule,
           scheduleHistory: newHistory,
         });
+      },
+
+      importTournamentData: (data) => {
+        const { payload, error } = validateImportPayload(data);
+
+        if (!payload) {
+          return { success: false, error: error ?? 'Fichier JSON invalide.' };
+        }
+
+        set({
+          settings: payload.settings,
+          series: payload.series,
+          schedule: payload.schedule,
+          scheduleHistory: [],
+          currentPhase: payload.series.length > 0 ? 'schedule' : 'config',
+        });
+
+        return { success: true };
       },
 
       resetAll: () => set(initialState),
