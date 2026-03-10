@@ -187,12 +187,12 @@ export const SchedulePhase: React.FC = () => {
               >
                 ↶ Annuler
               </button>
-              <button
+              {/* <button
                 onClick={handleAutoSchedule}
                 className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
               >
                 🪄 Auto-générer
-              </button>
+              </button> */}
               <button
                 onClick={clearSchedule}
                 className="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
@@ -228,8 +228,8 @@ export const SchedulePhase: React.FC = () => {
               <button
                 onClick={() => setViewMode('grid')}
                 className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === 'grid'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
               >
                 📊 Grille horaire
@@ -237,8 +237,8 @@ export const SchedulePhase: React.FC = () => {
               <button
                 onClick={() => setViewMode('table')}
                 className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === 'table'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
               >
                 📋 Vue par série

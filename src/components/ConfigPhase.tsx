@@ -85,19 +85,6 @@ const BRACKET_TEMPLATES: BracketTemplate[] = [
       { label: 'Poule T2', matchCount: 2 },
       { label: 'Poule T3', matchCount: 2 }
     ],
-  },
-  {
-    id: 'single-pool-6',
-    name: 'Poule unique (6 équipes)',
-    description: 'Une poule de 6 avec finale',
-    rounds: [
-      { label: 'Poule T1', matchCount: 3 },
-      { label: 'Poule T2', matchCount: 3 },
-      { label: 'Poule T3', matchCount: 3 },
-      { label: 'Poule T4', matchCount: 3 },
-      { label: 'Poule T5', matchCount: 3 },
-      { label: 'Finale', matchCount: 1 },
-    ],
   }
 ];
 
