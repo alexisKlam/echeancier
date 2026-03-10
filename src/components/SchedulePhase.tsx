@@ -15,16 +15,16 @@ import { ScheduleGrid } from './ScheduleGrid';
 import { UnscheduledPool } from './UnscheduledPool';
 import { RoundItemStatic } from './RoundItem';
 import { SeriesTableView } from './SeriesTableView';
+import { VerticalScheduleView } from './VerticalScheduleView';
 import { Round, Series } from '../types';
 
-type ViewMode = 'grid' | 'table';
+type ViewMode = 'grid' | 'table' | 'vertical';
 
 export const SchedulePhase: React.FC = () => {
   const {
     setPhase,
     scheduleRoundWithPush,
     unscheduleRound,
-    autoSchedule,
     clearSchedule,
     undoSchedule,
     series,
@@ -94,10 +94,6 @@ export const SchedulePhase: React.FC = () => {
       scheduleRoundWithPush(roundId, row, col);
       setError(null);
     }
-  };
-
-  const handleAutoSchedule = () => {
-    autoSchedule();
   };
 
   const handleExportJSON = () => {
@@ -243,6 +239,15 @@ export const SchedulePhase: React.FC = () => {
               >
                 📋 Vue par série
               </button>
+              <button
+                onClick={() => setViewMode('vertical')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === 'vertical'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+              >
+                🧾 Vue verticale
+              </button>
             </div>
           </div>
 
@@ -267,8 +272,10 @@ export const SchedulePhase: React.FC = () => {
               <ScheduleGrid />
             </div>
           </div>
-        ) : (
+        ) : viewMode === 'table' ? (
           <SeriesTableView />
+        ) : (
+          <VerticalScheduleView />
         )}
 
         {/* Instructions - only show in grid mode */}

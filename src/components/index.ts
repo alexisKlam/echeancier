@@ -5,3 +5,4 @@ export { ScheduleCell } from './ScheduleCell';
 export { UnscheduledPool } from './UnscheduledPool';
 export { RoundItem, RoundItemStatic, DraggableRoundInGrid } from './RoundItem';
 export { SeriesTableView } from './SeriesTableView';
+export { VerticalScheduleView } from './VerticalScheduleView';
