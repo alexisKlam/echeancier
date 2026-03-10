@@ -31,6 +31,7 @@ interface TournamentStore extends TournamentState {
   scheduleRoundNext: (roundId: string) => void;
   scheduleNextRoundOfSeries: (currentRoundId: string) => void;
   unscheduleRound: (roundId: string) => void;
+  unscheduleSeries: (seriesId: string) => void;
   moveScheduledRound: (roundId: string, newRow: number, newCol: number) => void;
   removeEmptyCell: (row: number, col: number) => void;
   clearSchedule: () => void;
@@ -343,6 +344,26 @@ export const useTournamentStore = create<TournamentStore>()(
           const newHistory = [...state.scheduleHistory, state.schedule].slice(-20);
           return {
             schedule: state.schedule.filter((sr) => sr.roundId !== roundId),
+            scheduleHistory: newHistory,
+          };
+        }),
+
+      unscheduleSeries: (seriesId) =>
+        set((state) => {
+          const targetSeries = state.series.find((s) => s.id === seriesId);
+          if (!targetSeries) return state;
+
+          const roundIds = new Set(targetSeries.rounds.map((r) => r.id));
+          const nextSchedule = state.schedule.filter((sr) => !roundIds.has(sr.roundId));
+
+          // Nothing changed, keep current state untouched.
+          if (nextSchedule.length === state.schedule.length) {
+            return state;
+          }
+
+          const newHistory = [...state.scheduleHistory, state.schedule].slice(-20);
+          return {
+            schedule: nextSchedule,
             scheduleHistory: newHistory,
           };
         }),

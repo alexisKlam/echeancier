@@ -115,7 +115,7 @@ export const ScheduleCell: React.FC<ScheduleCellProps> = ({ row, col }) => {
       {roundInfo && !roundInfo.isFirstCell && (
         <div className="h-full w-full" style={{
           backgroundColor: roundInfo.series.color,
-          opacity: 0.3
+          //opacity: 0.3
         }} />
       )}
     </div>
